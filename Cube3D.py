@@ -6,10 +6,10 @@ plt.style.use('dark_background')
 
 class cube3D:
     """
-    This class creates a cube from a specified width, theta which rotates around the z-axis,
-    phi which rotates around the y-axis. This cube can be represented as a 3D matrix comprised
-    of ones. The cube is projected onto a 2D plane, and both the cube and the projection can
-    then be plotted. The rotated cube can also be plotted currently as a 3D scatter plot.
+    This class creates a cube from a specified width and 2 angles of rotation, theta and phi.
+    This cube can be represented as a 3D matrix comprised of ones. The cube is projected onto
+    a 2D plane, and both the cube and the projection can then be plotted. The rotated cube can
+    also be plotted currently as a 3D scatter plot.
     """
     def __init__(self, width, theta=0, phi=0, view_axis="z"):
         self.width = width
