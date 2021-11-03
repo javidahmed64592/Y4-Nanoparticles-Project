@@ -12,10 +12,19 @@ class cube3D:
     also be plotted currently as a 3D scatter plot.
     """
     def __init__(self, width, theta=0, phi=0, view_axis="z"):
+        """
+        Initialises the class.
+
+        Inputs:
+
+            width: Width of the shape being created
+            theta: Offset of the azimuthal angle
+            phi: Offset of the polar angle
+            view_axis: Axis from which to view the 2D projection of the 3D shape
+        """
         self.width = width
         self.theta = theta
         self.phi = phi
-        self.name = "Cube_W%s_T%s_P%s" % (self.width, int(self.theta * 180 / np.pi), int(self.phi * 180 / np.pi))
 
         self.view_axis = view_axis
         self.axes = ["x", "y", "z"]
@@ -23,8 +32,26 @@ class cube3D:
         self.x0 = np.arange(self.width)
         self.matrix = np.ones((self.width, self.width, self.width))
 
+        self.generate_shape()
         self.generate_coordinates()
         self.projection2D()
+
+    def generate_shape(self):
+        """
+        Generates the initial coordinates for a cube. If multiple shapes are created, those classes
+        can inherit from this class and just override this function to be specific to that shape.
+        """
+        self.name = "Cube_W%s_T%s_P%s" % (self.width, int(self.theta * 180 / np.pi), int(self.phi * 180 / np.pi))
+
+        self.x0 = np.arange(self.width)
+        self.matrix = np.ones((self.width, self.width, self.width))
+
+        self.coords = []
+
+        for x in self.x0:
+            for y in self.x0:
+                for z in self.x0:
+                    self.coords.append([x, y, z])
 
     def Xi(self, r, theta, phi):
         """
@@ -39,9 +66,9 @@ class cube3D:
 
         Inputs:
 
-            r = x^2 + y^2 + z^2
-            theta = Angle measured from xy plane
-            phi = Angle measured from x axis
+            r: NumPy array of distances between each coordinate and the origin
+            theta: NumPy array of angles theta of that coordinate
+            phi: NumPy array of angles phi of that coordinate
         """
         t = theta + self.theta
         t1 = np.where((t >= 0) & (t < 2 * np.pi), t, 0) # Making sure all values obey 0 < θ < 2π
@@ -66,13 +93,6 @@ class cube3D:
         """
         Generates all xyz coordinates.
         """
-        self.coords = []
-
-        for x in self.x0:
-            for y in self.x0:
-                for z in self.x0:
-                    self.coords.append([x, y, z])
-
         self.XYZ0 = np.array(self.coords)
 
         x = self.XYZ0[:, 0]
