@@ -44,22 +44,23 @@ class cube3D:
             phi = Angle measured from x axis
         """
         t = theta + self.theta
-        if t < 0:
-            t += 2 * np.pi
-        elif t > 2 * np.pi:
-            t -= 2 * np.pi
+        t1 = np.where((t >= 0) & (t < 2 * np.pi), t, 0) # Making sure all values obey 0 < θ < 2π
+        t2 = np.where(t < 0, ((t / (2 * np.pi)) % 1) * 2 * np.pi, 0)
+        t3 = np.where(t > 2 * np.pi, 2 * np.pi - (t / (2 * np.pi) % 1) * 2 * np.pi, 0)
+        t = t1 + t2 + t3
+
 
         p = phi + self.phi
-        if p < 0:
-            p += np.pi
-        elif p > np.pi:
-            p -= np.pi
+        p1 = np.where((p >= 0) & (p < np.pi), p, 0) # Making sure all values obey 0 < ø < π
+        p2 = np.where(p < 0, ((p / np.pi) % 1) * np.pi, 0)
+        p3 = np.where(p > np.pi, np.pi - ((p / np.pi) % 1) * np.pi, 0)
+        p = p1 + p2 + p3
 
         x = r * np.cos(t) * np.sin(p)
         y = r * np.sin(t) * np.sin(p)
         z = r * np.cos(p)
 
-        return [x, y, z]
+        return np.stack([x,y,z], axis=1)
 
     def generate_coordinates(self):
         """
@@ -70,31 +71,26 @@ class cube3D:
         for x in self.x0:
             for y in self.x0:
                 for z in self.x0:
-                    r = np.sqrt(x**2 + y**2 + z**2)
+                    self.coords.append([x, y, z])
 
-                    if x != 0:
-                        theta = np.arctan(y/x)
-                    else:
-                        theta = np.pi/2
+        self.XYZ0 = np.array(self.coords)
 
-                    if r != 0:
-                        phi = np.arccos(z/r)
-                    else:
-                        phi = -np.pi/2
+        x = self.XYZ0[:, 0]
+        y = self.XYZ0[:, 1]
+        z = self.XYZ0[:, 2]
 
-                    xi = self.Xi(r, theta, phi)
+        r = np.sqrt(x**2 + y**2 + z**2)
+        theta = np.where(x==0, np.pi/2, np.arctan(y/x))
+        phi = np.where(r==0, 0, np.arccos(z/r))
 
-                    self.coords.append(xi)
-
-        self.XYZ = np.array(self.coords)
-        print(self.XYZ)
+        self.XYZ = self.Xi(r, theta, phi)
 
     def projection2D(self):
         """
         Projects 3D shape onto 2D plane.
         """
-        self.coords2D = np.delete(self.XYZ, self.axes.index(self.view_axis), axis=1) # Remove the z coordinates
-        self.coords2D = np.unique(self.coords2D, axis = 0) # Remove duplicate xy coordinate pairs.
+        self.coords2D = np.delete(self.XYZ, self.axes.index(self.view_axis), axis=1) # Remove the view axis coordinates
+        self.coords2D = np.unique(self.coords2D, axis = 0) # Remove duplicate coordinate pairs.
         temp_coords = self.axes
         temp_coords.remove(self.view_axis)
         self.axes2D = temp_coords
@@ -134,16 +130,16 @@ class cube3D:
 #cube1 = cube3D(4, theta=45*(np.pi/180))
 #cube1.plot()
 
-#cube2 = cube3D(8, theta=0*(np.pi/180))
-#cube2.plot()
+cube2 = cube3D(8, phi=45*(np.pi/180), view_axis = "x")
+cube2.plot()
 
-cube3 = cube3D(8, theta=15*(np.pi/180), view_axis = "x")
+cube3 = cube3D(8, theta=45*(np.pi/180), view_axis = "x")
 cube3.plot()
 
-cube4 = cube3D(8, theta=15*(np.pi/180), view_axis = "y")
-cube4.plot()
+#cube4 = cube3D(8, theta=15*(np.pi/180), view_axis = "y")
+#cube4.plot()
 
-cube5 = cube3D(8, theta=15*(np.pi/180), view_axis = "z")
-cube5.plot()
+#cube5 = cube3D(8, theta=15*(np.pi/180), view_axis = "z")
+#cube5.plot()
 
 plt.show()
