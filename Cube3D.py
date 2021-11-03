@@ -2,108 +2,72 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-plt.style.use('dark_background')
+plt.style.use("dark_background")
 
-class cube3D:
+class shape3D:
     """
-    This class creates a cube from a specified width and 2 angles of rotation, theta and phi.
+    This class creates a cube from a specified width and 3 angles of rotation, rx, ry, rz.
     This cube can be represented as a 3D matrix comprised of ones. The cube is projected onto
     a 2D plane, and both the cube and the projection can then be plotted. The rotated cube can
     also be plotted currently as a 3D scatter plot.
     """
-    def __init__(self, width, theta=0, phi=0, view_axis="z"):
+    def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z"):
         """
         Initialises the class.
 
         Inputs:
 
             width: Width of the shape being created
-            theta: Offset of the azimuthal angle
-            phi: Offset of the polar angle
+            rx, ry, rz: Rotations about the x, y, z axes respectively
             view_axis: Axis from which to view the 2D projection of the 3D shape
         """
         self.width = width
-        self.theta = theta
-        self.phi = phi
+        self.rx = rx
+        self.ry = ry
+        self.rz = rz
 
         self.view_axis = view_axis
         self.axes = ["x", "y", "z"]
 
-        self.x0 = np.arange(self.width)
-        self.matrix = np.ones((self.width, self.width, self.width))
-
         self.generate_shape()
+        self.rotation_matrices()
         self.generate_coordinates()
         self.projection2D()
 
     def generate_shape(self):
         """
-        Generates the initial coordinates for a cube. If multiple shapes are created, those classes
-        can inherit from this class and just override this function to be specific to that shape.
+        Generates the initial coordinates for a shape. Override this function.
         """
-        self.name = "Cube_W%s_T%s_P%s" % (self.width, int(self.theta * 180 / np.pi), int(self.phi * 180 / np.pi))
+        pass
 
-        self.x0 = np.arange(self.width)
-        self.matrix = np.ones((self.width, self.width, self.width))
-
-        self.coords = []
-
-        for x in self.x0:
-            for y in self.x0:
-                for z in self.x0:
-                    self.coords.append([x, y, z])
-
-    def Xi(self, r, theta, phi):
+    def rotation_matrices(self):
         """
-        Calculates XYZ coordinates after rotation.
-
-        x = rcosθsinø
-        y = rsinθsinø
-        z = rcosø
-
-        => θ = arctan(y/x), measures from x-axis to y-axis.
-        => ø = arccos(z/r), measures from z-axis to xy plane.
-
-        Inputs:
-
-            r: NumPy array of distances between each coordinate and the origin
-            theta: NumPy array of angles theta of that coordinate
-            phi: NumPy array of angles phi of that coordinate
+        Calculates the rotation matrix to rotate the shape.
         """
-        t = theta + self.theta
-        t1 = np.where((t >= 0) & (t < 2 * np.pi), t, 0) # Making sure all values obey 0 < θ < 2π
-        t2 = np.where(t < 0, ((t / (2 * np.pi)) % 1) * 2 * np.pi, 0)
-        t3 = np.where(t > 2 * np.pi, 2 * np.pi - (t / (2 * np.pi) % 1) * 2 * np.pi, 0)
-        t = t1 + t2 + t3
+        Rx = np.array([[           1,                0,                0],
+                       [           0,  np.cos(self.rx), -np.sin(self.rx)],
+                       [           0,  np.sin(self.rx),  np.cos(self.rx)]])
 
+        Ry = np.array([[  np.cos(self.ry),           0,  np.sin(self.ry)],
+                       [                0,           1,                0],
+                       [ -np.sin(self.ry),           0,  np.cos(self.ry)]])
 
-        p = phi + self.phi
-        p1 = np.where((p >= 0) & (p < np.pi), p, 0) # Making sure all values obey 0 < ø < π
-        p2 = np.where(p < 0, ((p / np.pi) % 1) * np.pi, 0)
-        p3 = np.where(p > np.pi, np.pi - ((p / np.pi) % 1) * np.pi, 0)
-        p = p1 + p2 + p3
+        Rz = np.array([[  np.cos(self.rz), -np.sin(self.rz),           0],
+                       [  np.sin(self.rz),  np.cos(self.rz),           0],
+                       [                0,                0,           1]])
 
-        x = r * np.cos(t) * np.sin(p)
-        y = r * np.sin(t) * np.sin(p)
-        z = r * np.cos(p)
-
-        return np.stack([x,y,z], axis=1)
+        self.R = np.matmul(np.matmul(Rz, Ry), Rx)
 
     def generate_coordinates(self):
         """
         Generates all xyz coordinates.
         """
-        self.XYZ0 = np.array(self.coords)
+        v = []
 
-        x = self.XYZ0[:, 0]
-        y = self.XYZ0[:, 1]
-        z = self.XYZ0[:, 2]
+        for u in self.coords:
+            v.append(np.matmul(self.R, np.array(u)))
 
-        r = np.sqrt(x**2 + y**2 + z**2)
-        theta = np.where(x==0, np.pi/2, np.arctan(y/x))
-        phi = np.where(r==0, 0, np.arccos(z/r))
-
-        self.XYZ = self.Xi(r, theta, phi)
+        self.XYZ = np.array(v)
 
     def projection2D(self):
         """
@@ -119,19 +83,19 @@ class cube3D:
         """
         Plots 3D shape alongside its 2D projection.
         """
-        fig = plt.figure(figsize=(9, 9))
+        fig = plt.figure(figsize=(12, 12))
         idx = 1
 
         ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
         ax.voxels(self.matrix, facecolors="white")
         ax.set_title("3D: %s" % self.name)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
         idx += 1
 
         ax = fig.add_subplot(3, 3, idx)
-        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], c="white")
+        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=100, c="white")
         ax.set_title("2D Projection: %s" % self.name)
         ax.set_xlabel(self.axes2D[0])
         ax.set_ylabel(self.axes2D[1])
@@ -140,26 +104,34 @@ class cube3D:
         ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
         ax.scatter(self.XYZ[:,0], self.XYZ[:,1], self.XYZ[:,2], c="white")
         ax.set_title("3D Scatter: %s" % self.name)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
 
         fig.tight_layout()
 
-# Examples with 4x4x4 cube
-#cube1 = cube3D(4, theta=45*(np.pi/180))
-#cube1.plot()
+class cube3D(shape3D):
+    """
+    This class inherits from the shape3D cube and generates a name, x0, matrix and coords for a cube.
+    """
+    def generate_shape(self):
+        """
+        Generates the name and initial coordinates for a cube.
+        """
+        self.name = "Cube_W%s_rx%s_ry%s_rz%s" % (self.width, int(self.rx * 180 / np.pi), int(self.ry * 180 / np.pi), int(self.rz * 180 / np.pi))
 
-cube2 = cube3D(8, phi=45*(np.pi/180), view_axis = "x")
-cube2.plot()
+        self.x0 = np.arange(self.width)
+        self.matrix = np.ones((self.width, self.width, self.width))
 
-cube3 = cube3D(8, theta=45*(np.pi/180), view_axis = "x")
-cube3.plot()
+        self.coords = []
 
-#cube4 = cube3D(8, theta=15*(np.pi/180), view_axis = "y")
-#cube4.plot()
+        for x in self.x0:
+            for y in self.x0:
+                for z in self.x0:
+                    self.coords.append([x, y, z])
 
-#cube5 = cube3D(8, theta=15*(np.pi/180), view_axis = "z")
-#cube5.plot()
+# Examples with 8x8x8 cube
+cube1 = cube3D(8, rx=np.deg2rad(45), ry=np.deg2rad(45))
+cube1.plot()
 
 plt.show()
