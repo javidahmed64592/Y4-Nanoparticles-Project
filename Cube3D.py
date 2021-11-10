@@ -1,4 +1,6 @@
 import numpy as np
+import os
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -73,7 +75,6 @@ class shape3D:
         """
         Projects 3D shape onto 2D plane.
         """
-        # TODO: Change this to have greater intensity for duplicate coordinate pairs instead of removing them.
         self.coords2D = np.delete(self.XYZ, self.axes.index(self.view_axis), axis=1) # Remove the view axis coordinates
         self.coords2D, self.intensity = np.unique(np.around(self.coords2D, 2), axis = 0, return_counts = True) # Remove duplicate coordinate pairs.
         temp_axes = self.axes
@@ -85,20 +86,18 @@ class shape3D:
         self.coords2D = self.coords2D[self.intensity.argsort()] # Sorting coordinates and corresponding intensities
         self.intensity = np.array(["".join(item) for item in self.intensity[self.intensity.argsort()].astype(str)])
 
-    def plot(self):
+    def plot(self, save_file=False, save_path=os.getcwd() + "\\Simulated Data\\", file_type=".svg", show_plot=True):
         """
         Plots 3D shape alongside its 2D projection.
+
+        Inputs:
+
+            save_file: Boolean to decide whether or not to save the 2D projection.
+            save_path: Save location for 2D projection.
+            show_plot: Boolean to decide whether or not to show the 3 plots.
         """
         fig = plt.figure(figsize=(12, 12))
         idx = 1
-
-        ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
-        ax.voxels(self.matrix, facecolors="white")
-        ax.set_title("3D: %s" % self.name)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        idx += 1
 
         ax = fig.add_subplot(3, 3, idx)
         ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=10000*np.pi / self.width**2, c=self.intensity)
@@ -110,16 +109,31 @@ class shape3D:
         ax.set_xlim(lims)
         ax.set_ylim(lims)
         ax.set_aspect('equal', adjustable='box')
-        idx += 1
+        ax.set_axis_off()
 
-        ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
-        ax.scatter(self.XYZ[:,0], self.XYZ[:,1], self.XYZ[:,2], c="white")
-        ax.set_title("3D Scatter: %s" % self.name)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
+        if save_file:
+            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            fig.savefig(save_path + self.name + file_type, bbox_inches=extent)
+        
+        if show_plot:    
+            idx += 1
 
-        fig.tight_layout()
+            ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
+            ax.voxels(self.matrix, facecolors="white")
+            ax.set_title("3D: %s" % self.name)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_zlabel("z")
+            idx += 1
+
+            ax = fig.add_subplot(3, 3, idx, projection=Axes3D.name)
+            ax.scatter(self.XYZ[:,0], self.XYZ[:,1], self.XYZ[:,2], c="white")
+            ax.set_title("3D Scatter: %s" % self.name)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_zlabel("z")
+
+            fig.tight_layout()
 
 class cube3D(shape3D):
     """
@@ -136,7 +150,7 @@ class cube3D(shape3D):
         """
         Generates the name and initial coordinates for a cube.
         """
-        self.name = "Cube_W%s_rx%s_ry%s_rz%s" % (self.width, int(self.rx * 180 / np.pi), int(self.ry * 180 / np.pi), int(self.rz * 180 / np.pi))
+        self.name = "Cube_W%s_rx%s_ry%s_rz%s" % (self.width, int(np.rad2deg(self.rx)), int(np.rad2deg(self.ry)), int(np.rad2deg(self.rz)))
 
         self.x0 = self.a * np.arange(-(self.width-1)/2, self.width/2, 1)
         self.matrix = np.ones((self.width, self.width, self.width))
@@ -149,7 +163,24 @@ class cube3D(shape3D):
                     self.coords.append([x, y, z])
 
 # Examples with 10x10x10 cube
-cube1 = cube3D(10, rx=np.deg2rad(0), ry=np.deg2rad(45), a=1)
-cube1.plot()
+def generate_cubes(width, rx, ry, save_file=False, save_path=os.getcwd() + "\\Simulated Data\\", file_type=".svg", show_plot=True):
+    """
+    Create cubes of specified width, to have all combinations of rotations in x and y.
+    """
+    for angle_x in rx:
+        for angle_y in ry:
+            cube = cube3D(width, rx=np.deg2rad(angle_x), ry=np.deg2rad(angle_y))
+            cube.plot(save_file=save_file, save_path=save_path, file_type=file_type, show_plot=show_plot)
 
-plt.show()
+save_file = True
+show_plot = False
+file_type = ".svg"
+
+width = 10
+rx = [0, 15, 30, 45]
+ry = [0, 15, 30, 45]
+
+generate_cubes(width=width, rx=rx, ry=ry, save_file=save_file, file_type=file_type, show_plot=show_plot)
+
+if show_plot:
+    plt.show()
