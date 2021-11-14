@@ -19,9 +19,9 @@ class shape3D:
 
         Inputs:
 
-            width: Width of the shape being created
-            rx, ry, rz: Rotations about the x, y, z axes respectively
-            view_axis: Axis from which to view the 2D projection of the 3D shape
+            width: Integer, Width of the shape being created
+            rx, ry, rz: Float, Rotations in degrees about the x, y, z axes respectively
+            view_axis: String, Axis from which to view the 2D projection of the 3D shape
         """
         self.width = width
         self.rx = rx
@@ -46,17 +46,22 @@ class shape3D:
         """
         Calculates the rotation matrix to rotate the shape.
         """
-        Rx = np.array([[           1,                0,                0],
-                       [           0,  np.cos(self.rx), -np.sin(self.rx)],
-                       [           0,  np.sin(self.rx),  np.cos(self.rx)]])
+        rx = np.deg2rad(self.rx)
+        ry = np.deg2rad(self.ry)
+        rz = np.deg2rad(self.rz)
 
-        Ry = np.array([[  np.cos(self.ry),           0,  np.sin(self.ry)],
-                       [                0,           1,                0],
-                       [ -np.sin(self.ry),           0,  np.cos(self.ry)]])
 
-        Rz = np.array([[  np.cos(self.rz), -np.sin(self.rz),           0],
-                       [  np.sin(self.rz),  np.cos(self.rz),           0],
-                       [                0,                0,           1]])
+        Rx = np.array([[           1,           0,           0],
+                       [           0,  np.cos(rx), -np.sin(rx)],
+                       [           0,  np.sin(rx),  np.cos(rx)]])
+
+        Ry = np.array([[  np.cos(ry),           0,  np.sin(ry)],
+                       [           0,           1,           0],
+                       [ -np.sin(ry),           0,  np.cos(ry)]])
+
+        Rz = np.array([[  np.cos(rz), -np.sin(rz),           0],
+                       [  np.sin(rz),  np.cos(rz),           0],
+                       [           0,           0,           1]])
 
         self.R = np.matmul(np.matmul(Rz, Ry), Rx)
 
@@ -76,44 +81,44 @@ class shape3D:
         Projects 3D shape onto 2D plane.
         """
         self.coords2D = np.delete(self.XYZ, self.axes.index(self.view_axis), axis=1) # Remove the view axis coordinates
-        self.coords2D, self.intensity = np.unique(np.around(self.coords2D, 2), axis = 0, return_counts = True) # Remove duplicate coordinate pairs.
+
         temp_axes = self.axes
         temp_axes.remove(self.view_axis)
         self.axes2D = temp_axes
 
-        max = np.amax(self.intensity)
-        self.intensity = 0.4 + 0.5*(self.intensity/max) # Base intensity + (Scaling factor * Ratio of intensity to max intensity)
-        self.coords2D = self.coords2D[self.intensity.argsort()] # Sorting coordinates and corresponding intensities
-        self.intensity = np.array(["".join(item) for item in self.intensity[self.intensity.argsort()].astype(str)])
-
-    def plot(self, save_file=False, save_path=os.getcwd() + "\\Simulated Data\\", file_type=".svg", show_plot=True):
+    def plot(self, save_file=False, save_path=os.getcwd() + "\\Simulated Data\\", file_name = "default", file_type=".svg", show_plot=True):
         """
         Plots 3D shape alongside its 2D projection.
 
         Inputs:
 
-            save_file: Boolean to decide whether or not to save the 2D projection.
-            save_path: Save location for 2D projection.
-            show_plot: Boolean to decide whether or not to show the 3 plots.
+            save_file: Boolean, choose whether or not to save the 2D projection.
+            save_path: String, Save location for 2D projection.
+            show_plot: Boolean, choose whether or not to show the 3 plots.
         """
         fig = plt.figure(figsize=(12, 12))
         idx = 1
 
         ax = fig.add_subplot(3, 3, idx)
-        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=10000*np.pi / self.width**2, c=self.intensity)
+        cf = 0.7 # 0 for black, 1 for white
+        alpha = 0.4 # Transparency of points
+        c = np.array(["".join(item) for item in (np.ones(np.shape(self.coords2D)[0]) * cf).astype(str)])
+        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=10000*np.pi / self.width**2, c=c, alpha=alpha, edgecolors="none")
         ax.set_title("2D Projection: %s" % self.name)
         ax.set_xlabel(self.axes2D[0])
         ax.set_ylabel(self.axes2D[1])
 
-        lims = [np.amin(self.coords2D) - 1, np.amax(self.coords2D) + 1]
+        lims = [-10, 10]
         ax.set_xlim(lims)
         ax.set_ylim(lims)
         ax.set_aspect('equal', adjustable='box')
         ax.set_axis_off()
 
         if save_file:
+            if file_name == "default":
+                file_name = self.name
             extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            fig.savefig(save_path + self.name + file_type, bbox_inches=extent)
+            fig.savefig(save_path + file_name + "." + file_type, format=file_type, bbox_inches=extent)
         
         if show_plot:    
             idx += 1
@@ -133,7 +138,7 @@ class shape3D:
             ax.set_ylabel("y")
             ax.set_zlabel("z")
 
-            fig.tight_layout()
+        fig.tight_layout()
 
 class cube3D(shape3D):
     """
@@ -150,7 +155,7 @@ class cube3D(shape3D):
         """
         Generates the name and initial coordinates for a cube.
         """
-        self.name = "Cube_W%s_rx%s_ry%s_rz%s" % (self.width, int(np.rad2deg(self.rx)), int(np.rad2deg(self.ry)), int(np.rad2deg(self.rz)))
+        self.name = "Cube_W%s_rx%s_ry%s_rz%s" % (self.width, self.rx, self.ry, self.rz)
 
         self.x0 = self.a * np.arange(-(self.width-1)/2, self.width/2, 1)
         self.matrix = np.ones((self.width, self.width, self.width))
@@ -169,12 +174,12 @@ def generate_cubes(width, rx, ry, save_file=False, save_path=os.getcwd() + "\\Si
     """
     for angle_x in rx:
         for angle_y in ry:
-            cube = cube3D(width, rx=np.deg2rad(angle_x), ry=np.deg2rad(angle_y))
+            cube = cube3D(width, rx=angle_x, ry=angle_y)
             cube.plot(save_file=save_file, save_path=save_path, file_type=file_type, show_plot=show_plot)
 
 save_file = True
 show_plot = False
-file_type = ".svg"
+file_type = "png"
 
 width = 10
 rx = [0, 15, 30, 45]
