@@ -65,4 +65,4 @@ def iter_through_files_and_blur(file_path, blur_range=[12, 14]):
 
 # Specifying the path with all the folders containing the simulated data 
 file_path = os.path.join(os.getcwd(), "Simulated Data")
-iter_through_files_and_blur(file_path, blur_range=[8, 8])
+iter_through_files_and_blur(file_path, blur_range=[8, 12])
