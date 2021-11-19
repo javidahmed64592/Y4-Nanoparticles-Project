@@ -14,16 +14,17 @@ class shape3D:
     a 2D plane, and both the shape and the projection can then be plotted. The rotated shape can
     also be plotted currently as a 3D scatter plot.
     """
-    def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z", d=0):
+    def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z", d=0, u=0):
         """
         Initialises the class.
 
         Inputs:
 
-            width: Integer, Width of the shape being created
-            rx, ry, rz: Float, Rotations in degrees about the x, y, z axes respectively
-            view_axis: String, Axis from which to view the 2D projection of the 3D shape
-            d: Float between 0 and 1, percentage of defects in the shape, 0 is no defects.
+            width: Integer, width of the shape being created
+            rx, ry, rz: Float, rotations in degrees about the x, y, z axes respectively
+            view_axis: String, axis from which to view the 2D projection of the 3D shape
+            d: Float between 0 and 1, percentage of defects in the shape, 0 is no defects
+            u: Float, between 0 and 1, strength of positional noise
         """
         self.width = width
         self.rx = rx
@@ -34,6 +35,7 @@ class shape3D:
         self.axes = ["x", "y", "z"]
 
         self.d = d
+        self.u = u
 
         self.generate_shape()
         self.rotation_matrices()
@@ -98,19 +100,21 @@ class shape3D:
 
     def plot(self, save_file=False, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_name = "default", file_type=".svg", iter=0):
         """
-        Plots 3D shape alongside its 2D projection.
+        Plots 2D projection and saves if specified.
 
         Inputs:
 
             save_file: Boolean, choose whether or not to save the 2D projection.
-            save_path: String, Save location for 2D projection.
-            show_plot: Boolean, choose whether or not to show the 3 plots.
+            save_path: String, save location for 2D projection.
+            file_name: String, name to use to save the projection
+            file_type: String, file type to save projection as
+            iter: Integer, which number cube is this projection for
         """
         ax = fig.add_subplot(1, 1, 1)
-        cf = 0.7 # 0 for black, 1 for white
-        alpha = 0.4 # Transparency of points
+        cf = 0.85 # 0 for black, 1 for white
+        alpha = 0.6 # Transparency of points
         c = np.array(["".join(item) for item in (np.ones(np.shape(self.coords2D)[0]) * cf).astype(str)])
-        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=3500*np.pi / self.width**2, c=c, alpha=alpha, edgecolors="none")
+        ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=200*np.pi / self.width**2, c=c, alpha=alpha, edgecolors="none") # TODO: Make points smaller and add more blur instead, since points are unrotated when shape is rotated
         ax.set_title("2D Projection: %s" % self.name)
         ax.set_xlabel(self.axes2D[0])
         ax.set_ylabel(self.axes2D[1])
@@ -142,12 +146,12 @@ class cube3D(shape3D):
     """
     This class inherits from the shape3D class and generates a name, x0, matrix and coords for a cube.
     """
-    def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z", a=1, d=0):
+    def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z", a=1, d=0, u=0):
         """
         Introduces an additional parameter, a, which is the lattice constant.
         """
         self.a = a
-        super().__init__(width, rx, ry, rz, view_axis, d)
+        super().__init__(width, rx, ry, rz, view_axis, d, u)
 
     def generate_shape(self):
         """
@@ -159,20 +163,21 @@ class cube3D(shape3D):
         self.matrix = np.ones((self.width, self.width, self.width))
 
         self.coords = []
+        offset = 0.5 * self.u
 
         for x in self.x0:
             for y in self.x0:
                 for z in self.x0:
-                    self.coords.append([x, y, z])
+                    self.coords.append([x + np.random.uniform(-offset, offset), y + np.random.uniform(-offset, offset), z + np.random.uniform(-offset, offset)])
 
 # Examples with 10x10x10 cube
-def generate_cubes(width, rx, ry, d=0, save_file=False, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_type=".svg", iter=0):
+def generate_cubes(width, rx, ry, d=0, u=0, save_file=False, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_type=".svg", iter=0):
     """
     Create cubes of specified width, to have all combinations of rotations in x and y.
     """
     for angle_x in rx:
         for angle_y in ry:
-            cube = cube3D(width, rx=angle_x, ry=angle_y, d=d)
+            cube = cube3D(width, rx=angle_x, ry=angle_y, d=d, u=u)
             cube.plot(save_file=save_file, save_path=save_path, file_type=file_type, iter=iter)
 
 save_file = True
@@ -181,9 +186,9 @@ file_type = "png"
 width = 10
 rx = [0, 15, 30, 45] # Angle in degrees
 ry = [0, 15, 30, 45]
-d = [0.05, 0.10, 0.15, 0.20] # Percentage defect of the shape
+d = [0.00, 0.05, 0.10, 0.15] # Percentage defect of the shape
 
 iters = 4 # How many of each cube to make
 for i in range(iters):
     for defect in d:
-        generate_cubes(width=width, rx=rx, ry=ry, d=defect, save_file=save_file, file_type=file_type, iter=i)
+        generate_cubes(width=width, rx=rx, ry=ry, d=defect, u=np.random.uniform(0, 1), save_file=save_file, file_type=file_type, iter=i)
