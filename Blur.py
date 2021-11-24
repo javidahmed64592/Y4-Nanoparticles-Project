@@ -32,9 +32,7 @@ def blur_and_save(file_name, file_type, file_path, save_path, blur_range):
         save_path: String, new path to save the blurred image
         blur_range: List, range of values to blur the images
     """
-    n = np.arange(blur_range[0], blur_range[1] + 1)
-
-    for blur in n:
+    for blur in blur_range:
         kernel = np.ones((blur, blur), np.float32) / (blur**2) # Generate Gaussian kernel
         img = cv2.imread(os.path.join(file_path, file_name)) # Load image
         dst = cv2.filter2D(img, -1, kernel) # Blur image
@@ -65,4 +63,4 @@ def iter_through_files_and_blur(file_path, blur_range=[12, 14]):
 
 # Specifying the path with all the folders containing the simulated data 
 file_path = os.path.join(os.getcwd(), "Simulated Data")
-iter_through_files_and_blur(file_path, blur_range=[6, 9])
+iter_through_files_and_blur(file_path, blur_range=[7, 9])
