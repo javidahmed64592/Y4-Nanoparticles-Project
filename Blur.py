@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import os
 
 plt.style.use("dark_background")
-fig = plt.figure(figsize=(4, 4))
+fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(1, 1, 1)
 ax.set_axis_off()
 
@@ -33,16 +33,16 @@ def blur_and_save(file_name, file_type, file_path, save_path, blur_range):
         blur_range: List, range of values to blur the images
     """
     for blur in blur_range:
-        kernel = np.ones((blur, blur), np.float32) / (blur**2) # Generate Gaussian kernel
+        #kernel = np.ones((blur, blur), np.float32) / (blur**2) # Generate Gaussian kernel
         img = cv2.imread(os.path.join(file_path, file_name)) # Load image
-        dst = cv2.filter2D(img, -1, kernel) # Blur image
+        dst = cv2.GaussianBlur(img, (blur, blur), 0) # Blur image
 
         ax.cla() # Clear previous axes, plot new one
         ax.imshow(dst)
         ax.set_axis_off()
 
         extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-        fig.savefig(os.path.join(save_path, file_name.split(".")[0] + ("_Bn%s." % blur) + file_type), format=file_type, bbox_inches=extent) # Save new image
+        fig.savefig(os.path.join(save_path, file_name.split(".")[0] + (" Bn%s." % blur) + file_type), format=file_type, bbox_inches=extent) # Save new image
 
 def iter_through_files_and_blur(file_path, blur_range=[12, 14]):
     """
@@ -61,6 +61,9 @@ def iter_through_files_and_blur(file_path, blur_range=[12, 14]):
             if file.endswith(".png"):
                 blur_and_save(file_name=file, file_type="png", file_path=temp_path, save_path=new_path, blur_range=blur_range)
 
-# Specifying the path with all the folders containing the simulated data 
-file_path = os.path.join(os.getcwd(), "Simulated Data")
-iter_through_files_and_blur(file_path, blur_range=[7, 9])
+if __name__ == "__main__":
+    # Specifying the path with all the folders containing the simulated data 
+    file_path = os.path.join(os.getcwd(), "Simulated Data")
+
+    blur_range = [15]
+    iter_through_files_and_blur(file_path, blur_range=blur_range)
