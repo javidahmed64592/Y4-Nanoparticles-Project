@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 plt.style.use("dark_background")
-fig = plt.figure(figsize=(6, 6))
+fig = plt.figure(figsize=(3, 3))
 
 class shape3D:
     """
@@ -17,9 +17,7 @@ class shape3D:
     def __init__(self, width=10, rx=0, ry=0, rz=0, view_axis="z", defect=0, pos_error=0):
         """
         Initialises the class.
-
         Inputs:
-
             width: Integer, width of the shape being created
             rx, ry, rz: Float, rotations in degrees about the x, y, z axes respectively
             view_axis: String, axis from which to view the 2D projection of the 3D shape
@@ -94,18 +92,21 @@ class shape3D:
             for _ in range(iters):
                 self.coords2D = np.delete(self.coords2D, np.random.randint(np.shape(self.coords2D)[0]-1), 0)
 
+        self.coords2D[:,0] += np.random.uniform(-1, 1)
+        self.coords2D[:,1] += np.random.uniform(-1, 1)
+
         self.ax = fig.add_subplot(1, 1, 1)
 
-        blurs = 4
-        start_size = 200
+        blurs = 30
+        start_size = 300
         blur_res = 2000
 
         for blur in range(blurs): # Artificial blur around points
-            alpha = 0.9 / (blur + 1)
+            alpha = 2 / (blur**2+0.5)
             size = start_size + (blur_res * blur)
             self.ax.scatter(self.coords2D[:,0], self.coords2D[:,1], s=size * (np.pi / self.width**2), c="white", alpha=alpha/blurs, edgecolors="none")
 
-        lims = [-(self.width - 1), self.width-1]
+        lims = [-self.width/2 - 2, self.width/2 + 2]
         self.ax.set_xlim(lims)
         self.ax.set_ylim(lims)
         self.ax.set_aspect('equal', adjustable='box')
@@ -114,16 +115,14 @@ class shape3D:
     def save_projection(self, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_name = "default", file_type=".svg", iter=0):
         """
         Saves the 2D projection.
-
         Inputs:
-
             save_path: String, folder in which to save the projections
             file_name: String, desired name for the projection's file name
             file_type: String, what file type to save the file as
             iter: Integer, number of cubes with same properties + 1
         """
         directory = "W%s RX%s RY%s" % (self.width, self.rx, self.ry)
-        file_path = os.path.join(save_path, directory)
+        file_path = save_path # os.path.join(save_path, directory) instead to separate cubes into folders
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
@@ -160,4 +159,5 @@ class cube3D(shape3D):
                     self.coords.append([x, y, z])
         
         self.coords = np.array(self.coords)
-        self.coords += np.random.normal(0, self.pos_error, np.shape(self.coords))
+        self.coords += np.random.normal(0, self.pos_error, np.shape(self.coords)) * self.a
+
