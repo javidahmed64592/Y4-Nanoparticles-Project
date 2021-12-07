@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # Generating the training cubes
     save_path_train = os.path.join(training_path, "W%s RX%s RY%s" % (width, rx, ry)) # Change to specify where to save
-    d_train = [0.06*i for i in range(5)] # Percentage defect of the shape
+    d_train = [0.06*i for i in range(6)] # Percentage defect of the shape
     iters_train = 15 # How many of each cube to make
 
     print("\nNow generating training dataset cubes...")
