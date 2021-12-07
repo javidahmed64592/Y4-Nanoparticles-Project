@@ -88,14 +88,14 @@ class shape3D:
                 self.coords2D = np.delete(self.coords2D, np.random.randint(coords2D_shape[0]-1), 0)
 
         # Translate shape around randomly
-        self.coords2D[0, :] += np.random.uniform(-1, 1)
-        self.coords2D[1, :] += np.random.uniform(-1, 1)
+        self.coords2D[0, :] += np.random.uniform(-1, 1) * 2
+        self.coords2D[1, :] += np.random.uniform(-1, 1) * 2
 
         # Creating the plot
         self.ax = fig.add_subplot(1, 1, 1)
         self.ax.set_axis_off()
 
-        outer = 2
+        outer = 4
         lims = [-(self.width/2 + outer), self.width/2 + outer]
         self.ax.set_xlim(lims)
         self.ax.set_ylim(lims)
@@ -109,12 +109,12 @@ class shape3D:
         self.ax.scatter(noise_x, noise_y, s=2, c="white", alpha=noise_alpha)
 
         # Artificial blur around points
-        blurs = 25
+        blurs = 10
         blur = np.arange(blurs)
         start_size = 3
-        blur_res = 3
+        blur_res = 9
 
-        alpha = 2 / ((blur)**2+(12*blur)+1) / self.width
+        alpha = 1.5 / ((blur)**2+(16*blur)+1) / self.width
         size = start_size + (blur_res * blur**2)
 
         for b in blur:
