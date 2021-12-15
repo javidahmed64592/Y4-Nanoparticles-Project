@@ -98,8 +98,8 @@ class shape3D:
         self.ax = fig.add_subplot(1, 1, 1)
         self.ax.set_axis_off()
 
-        outer = 4
-        self.lims = [-(self.width/2 + outer), self.width/2 + outer]
+        lim = 10
+        self.lims = [-lim, lim]
         self.ax.set_xlim(self.lims)
         self.ax.set_ylim(self.lims)
         self.ax.set_aspect('equal', adjustable='box')
