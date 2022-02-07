@@ -5,7 +5,6 @@
 import numpy as np
 import os
 import cv2
-from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
 # Configuring the plot
@@ -38,6 +37,7 @@ class shape3D:
         self.defect = defect
         self.pos_error = pos_error
         self.a = a
+        self.alpha = 0.2
 
         self.generate() # Generating the shape
         self.rotate() # Rotating the shape
@@ -103,7 +103,7 @@ class shape3D:
         self.ax.set_xlim(self.lims)
         self.ax.set_ylim(self.lims)
         self.ax.set_aspect('equal', adjustable='box')
-        self.ax.scatter(self.coords2D[0, :], self.coords2D[1, :], s=1, c="white", alpha=0.2)
+        self.ax.scatter(self.coords2D[0, :], self.coords2D[1, :], s=1, c="white", alpha=self.alpha)
 
     def save_projection(self, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_name = "default", file_type=".png", blur=None, iter=0):
         """
@@ -196,4 +196,48 @@ class cube3D(shape3D):
         """
         x0 = self.a * np.arange(-(self.width-1)/2, self.width/2, 1)
         self.coords = np.reshape(np.meshgrid(x0, x0, x0), (3, -1))
+        self.coords += np.random.normal(0, self.pos_error, np.shape(self.coords)) * self.a
+
+class tetrahedron3D(shape3D):
+    """
+    This class inherits from the shape3D class and is specifically for a tetrahedron.
+    """
+    def __init__(self, width=10, rx=0, ry=0, rz=0, a=1, defect=0, pos_error=0):
+        """
+        Create a tetrahedron and include that in the object name.
+        """
+        super().__init__(width, rx, ry, rz, a, defect, pos_error)
+        self.name = "Tetrahedron W%s RX%s RY%s D%s" % (self.width, self.rx, self.ry, int(100*self.defect))
+
+    def generate(self):
+        """
+        Generates all xyz coordinates.
+        """
+        self.alpha = 0.4
+        shape_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Vertices", "Tetrahedron")
+        shape_txt = "Tetra%s_Verts.txt" % self.width
+        self.coords = np.loadtxt(os.path.join(shape_folder, shape_txt))
+        self.coords *= self.a
+        self.coords += np.random.normal(0, self.pos_error, np.shape(self.coords)) * self.a
+
+class octahedron3D(shape3D):
+    """
+    This class inherits from the shape3D class and is specifically for a octahedron.
+    """
+    def __init__(self, width=10, rx=0, ry=0, rz=0, a=1, defect=0, pos_error=0):
+        """
+        Create a octahedron and include that in the object name.
+        """
+        super().__init__(width, rx, ry, rz, a, defect, pos_error)
+        self.name = "Octahedron W%s RX%s RY%s D%s" % (self.width, self.rx, self.ry, int(100*self.defect))
+
+    def generate(self):
+        """
+        Generates all xyz coordinates.
+        """
+        self.alpha = 0.4
+        shape_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Vertices", "Octahedron")
+        shape_txt = "Octa%s_Verts.txt" % self.width
+        self.coords = np.loadtxt(os.path.join(shape_folder, shape_txt))
+        self.coords *= self.a
         self.coords += np.random.normal(0, self.pos_error, np.shape(self.coords)) * self.a
