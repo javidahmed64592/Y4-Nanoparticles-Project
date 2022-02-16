@@ -75,6 +75,8 @@ class shape3D:
         self.R = np.matmul(np.matmul(Rz, Ry), Rx)
         self.coords = np.matmul(self.R, self.coords)
 
+        self.rotation = self.R[:,0:2].T.reshape((1, 6))
+
     def projection2D(self):
         """
         Projects 3D shape onto 2D plane.
@@ -98,12 +100,12 @@ class shape3D:
         self.ax = fig.add_subplot(1, 1, 1)
         self.ax.set_axis_off()
 
-        lim = 10
+        lim = 12
         self.lims = [-lim, lim]
         self.ax.set_xlim(self.lims)
         self.ax.set_ylim(self.lims)
         self.ax.set_aspect('equal', adjustable='box')
-        self.ax.scatter(self.coords2D[0, :], self.coords2D[1, :], s=1, c="white", alpha=self.alpha)
+        self.ax.scatter(self.coords2D[0, :], self.coords2D[1, :], s=0.8, c="white", alpha=self.alpha)
 
     def save_projection(self, save_path=os.path.join(os.getcwd(), "Simulated Data"), file_name = "default", file_type=".png", blur=None, iter=0):
         """
@@ -136,7 +138,7 @@ class shape3D:
         high_x = int(img.shape[1] - low_x)
 
         cropped = img[low_x:high_x, low_y:high_y]
-        cv2.imwrite(os.path.join(save_path, file_name), cropped)
+        #cv2.imwrite(os.path.join(save_path, file_name), cropped)
         plt.cla()
 
         # Blurring the projection
@@ -148,7 +150,8 @@ class shape3D:
 
             # Where to save
             blur_name = file_name.split(".")[0] + (" B%s.%s" % (blur, file_type))
-            blur_path = os.path.join(save_path, "Train", "RX%s" % (self.rx))
+            rotation6d = self.rotation.tolist()[0]
+            blur_path = os.path.join(save_path, "%s" % (rotation6d))
             blur_file_name = os.path.join(blur_path, blur_name)
 
             if not os.path.exists(blur_path):
