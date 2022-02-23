@@ -8,7 +8,7 @@ from Shape3D import cube3D, tetrahedron3D, octahedron3D
 import datetime
 
 # Defining main
-def main(w, rx, ry, a, d, pos_error, iters, blur, save_path, file_type):
+def main(shape_class, w, rx, ry, a, d, pos_error, iters, blur, save_path, file_type):
     total_images = len(w) * len(rx) * len(ry) * len(d) * iters
     counter = 1
     for angle_y in ry:
@@ -17,14 +17,8 @@ def main(w, rx, ry, a, d, pos_error, iters, blur, save_path, file_type):
                     for defect in d:
                         for i in range(iters):
                             print("Generating image %s of %s." % (counter, total_images))
-                            shape = tetrahedron3D(width, angle_x, angle_y, a=a, defect=defect, pos_error=pos_error)
+                            shape = shape_class(width, angle_x, angle_y, a=a, defect=defect, pos_error=pos_error)
                             shape.save_projection(save_path=save_path, file_type=file_type, blur=blur, iter=i)
-
-                            # shape = octahedron3D(width, angle_x, angle_y, a=a, defect=defect, pos_error=pos_error)
-                            # shape.save_projection(save_path=save_path, file_type=file_type, blur=blur, iter=i)
-
-                            # shape = cube3D(width, angle_x, angle_y, a=a, defect=defect, pos_error=pos_error)
-                            # shape.save_projection(save_path=save_path, file_type=file_type, blur=blur, iter=i)
 
                             counter += 1
 
@@ -37,11 +31,12 @@ if __name__ == "__main__":
     dataset_path = os.path.join(training_path, "Tetrahedrons Unmoving RY")
 
     # Properties of the shape and its projection
+    shape_class = tetrahedron3D
     width = [i for i in range(10, 13, 1)]
     rx = [i for i in range(0, 60, 60)] # Angle in degrees
     ry = [i for i in range(0, 60, 15)]
 
-    a = 0.75 # Pt nanoparticle lattice spacing: 0.24nm, atom size is ~0.1nm | 0.75 for cube
+    a = 1 # Pt nanoparticle lattice spacing: 0.24nm, atom size is ~0.1nm | 0.75 for cube
     blur = 4 # Strength of Gaussian blur
     d = [i/100 for i in range(0, 25, 5)] # Percentage defect of the shape
 
@@ -53,6 +48,7 @@ if __name__ == "__main__":
 
     print("\nNow generating training dataset images...")
     main(
+        shape_class=shape_class,
         w=width,
         rx=rx,
         ry=ry,
@@ -71,6 +67,7 @@ if __name__ == "__main__":
 
     print("\nNow generating validation dataset images...")
     main(
+        shape_class=shape_class,
         w=width,
         rx=rx,
         ry=ry,
@@ -89,6 +86,7 @@ if __name__ == "__main__":
 
     print("\nNow generating testing dataset images...")
     main(
+        shape_class=shape_class,
         w=width,
         rx=rx,
         ry=ry,
