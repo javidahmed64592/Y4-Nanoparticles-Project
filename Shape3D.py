@@ -37,7 +37,10 @@ class shape3D:
         self.defect = defect
         self.pos_error = pos_error
         self.a = a
-        self.alpha = 0.2
+        self.alpha = 0.5
+
+        data = "W%s RX%s RY%s RZ%s D%s" % (self.width, self.rx, self.ry, self.rz, int(100*self.defect))
+        self.name = "%s %s" % (self.name, data)
 
         self.generate() # Generating the shape
         self.rotate() # Rotating the shape
@@ -93,14 +96,14 @@ class shape3D:
                 self.coords2D = np.delete(self.coords2D, np.random.randint(coords2D_shape[0]-1), 0)
 
         # Translating the shape around randomly
-        self.coords2D[0, :] += np.random.uniform(-self.a, self.a) * 2.4
-        self.coords2D[1, :] += np.random.uniform(-self.a, self.a) * 2.4
+        #self.coords2D[0, :] += np.random.uniform(-self.a, self.a) * 2.4
+        #self.coords2D[1, :] += np.random.uniform(-self.a, self.a) * 2.4
 
         # Creating the plot
         self.ax = fig.add_subplot(1, 1, 1)
         self.ax.set_axis_off()
 
-        lim = 12
+        lim = 10
         self.lims = [-lim, lim]
         self.ax.set_xlim(self.lims)
         self.ax.set_ylim(self.lims)
@@ -138,7 +141,6 @@ class shape3D:
         high_x = int(img.shape[1] - low_x)
 
         cropped = img[low_x:high_x, low_y:high_y]
-        #cv2.imwrite(os.path.join(save_path, file_name), cropped)
         plt.cla()
 
         # Blurring the projection
@@ -174,7 +176,7 @@ class shape3D:
             fig.canvas.draw()
             dst = np.fromstring(fig.canvas.tostring_rgb(), dtype = np.uint8, sep = '')
             dst = dst.reshape(fig.canvas.get_width_height()[::-1] + (3, ))
-            dst = cv2.cvtColor(dst, cv2.COLOR_RGB2BGR)
+            dst = cv2.cvtColor(dst, cv2.COLOR_RGB2GRAY)
             cv2.imwrite(blur_file_name, cv2.resize(dst[low_x:high_x, low_y:high_y], (width, height)))
 
             os.remove(temp_name)
@@ -190,8 +192,8 @@ class cube3D(shape3D):
         """
         Create a cube and include that in the object name.
         """
+        self.name = "Cube"
         super().__init__(width, rx, ry, rz, a, defect, pos_error)
-        self.name = "Cube W%s RX%s RY%s D%s" % (self.width, self.rx, self.ry, int(100*self.defect))
 
     def generate(self):
         """
@@ -209,14 +211,13 @@ class tetrahedron3D(shape3D):
         """
         Create a tetrahedron and include that in the object name.
         """
+        self.name = "Tetrahedron"
         super().__init__(width, rx, ry, rz, a, defect, pos_error)
-        self.name = "Tetrahedron W%s RX%s RY%s D%s" % (self.width, self.rx, self.ry, int(100*self.defect))
 
     def generate(self):
         """
         Generates all xyz coordinates.
         """
-        self.alpha = 0.4
         shape_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Vertices", "Tetrahedron")
         shape_txt = "Tetra%s_Verts.txt" % self.width
         self.coords = np.loadtxt(os.path.join(shape_folder, shape_txt))
@@ -231,14 +232,13 @@ class octahedron3D(shape3D):
         """
         Create a octahedron and include that in the object name.
         """
+        self.name = "Octahedron"
         super().__init__(width, rx, ry, rz, a, defect, pos_error)
-        self.name = "Octahedron W%s RX%s RY%s D%s" % (self.width, self.rx, self.ry, int(100*self.defect))
 
     def generate(self):
         """
         Generates all xyz coordinates.
         """
-        self.alpha = 0.4
         shape_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Vertices", "Octahedron")
         shape_txt = "Octa%s_Verts.txt" % self.width
         self.coords = np.loadtxt(os.path.join(shape_folder, shape_txt))
