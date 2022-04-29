@@ -1,0 +1,6 @@
+RX [0, 45]
+RY [0, 45]
+Widths [12, 14]
+Lattice spacing 0.85
+blur 1
+iters 1
